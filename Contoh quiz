@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Koding & AI Interaktif</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        pre code {
+            font-family: 'Fira Code', 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between antialiased">
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-sky-500/10 rounded-lg border border-sky-500/20 text-sky-400">
+                    <i class="fa-solid fa-code text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight text-white">Quiz Koding & AI</h1>
+                    <p class="text-xs text-slate-400">35 Soal Pilihan Ganda</p>
+                </div>
+            </div>
+
+            <!-- Timer (Visible during quiz) -->
+            <div id="timer-container" class="hidden items-center space-x-2 bg-slate-800 px-4 py-2 rounded-full border border-slate-700">
+                <i class="fa-regular fa-clock text-sky-400"></i>
+                <span id="timer-display" class="font-mono text-sm font-semibold text-sky-300">35:00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 py-8 flex-grow w-full">
+
+        <!-- WELCOME SCREEN -->
+        <div id="welcome-screen" class="bg-slate-800/50 border border-slate-700/60 rounded-2xl p-6 md:p-10 text-center shadow-xl">
+            <div class="w-20 h-20 bg-sky-500/10 text-sky-400 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl border border-sky-500/30">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-bold text-white mb-3">Uji Pengetahuan Koding & AI Anda</h2>
+            <p class="text-slate-300 mb-8 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
+                Kuis ini dirancang untuk menguji pemahaman Anda seputar pemrograman web, struktur data, konsep Machine Learning, Neural Networks, hingga Large Language Models (LLM).
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mb-8 text-left">
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/40">
+                    <i class="fa-solid fa-list-check text-sky-400 mb-2"></i>
+                    <h3 class="font-semibold text-sm text-white">Jumlah Soal</h3>
+                    <p class="text-xs text-slate-400">35 Pertanyaan Pilihan Ganda</p>
+                </div>
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/40">
+                    <i class="fa-solid fa-hourglass-half text-emerald-400 mb-2"></i>
+                    <h3 class="font-semibold text-sm text-white">Batas Waktu</h3>
+                    <p class="text-xs text-slate-400">35 Menit Total Pengerjaan</p>
+                </div>
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/40">
+                    <i class="fa-solid fa-award text-amber-400 mb-2"></i>
+                    <h3 class="font-semibold text-sm text-white">Ulasan Lengkap</h3>
+                    <p class="text-xs text-slate-400">Pembahasan di akhir kuis</p>
+                </div>
+            </div>
+
+            <button id="start-btn" class="bg-sky-500 hover:bg-sky-600 text-white px-8 py-3.5 rounded-xl font-semibold transition-all shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transform hover:-translate-y-0.5">
+                Mulai Kuis Sekarang <i class="fa-solid fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="quiz-screen" class="hidden space-y-6">
+            <!-- Progress Bar -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center text-xs font-semibold text-slate-400">
+                    <span id="question-progress-text">Soal 1 dari 35</span>
+                    <span id="answered-count-text">0/35 Terjawab</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/50">
+                    <div id="progress-bar" class="bg-sky-500 h-2.5 rounded-full transition-all duration-300 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-6 md:p-8 shadow-xl">
+                <!-- Tag Category -->
+                <div class="mb-4">
+                    <span id="question-category" class="inline-block px-3 py-1 bg-sky-500/10 text-sky-400 border border-sky-500/20 text-xs font-medium rounded-full">
+                        Category
+                    </span>
+                </div>
+
+                <!-- Question Text -->
+                <h3 id="question-text" class="text-lg md:text-xl font-semibold text-white mb-6 leading-relaxed">
+                    Loading question...
+                </h3>
+
+                <!-- Options -->
+                <div id="options-container" class="space-y-3">
+                    <!-- Options injected via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="flex justify-between items-center pt-2">
+                <button id="prev-btn" class="px-5 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-chevron-left mr-2"></i> Sebelumnya
+                </button>
+                <button id="next-btn" class="px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold transition shadow-lg shadow-sky-500/20">
+                    Berikutnya <i class="fa-solid fa-chevron-right ml-2"></i>
+                </button>
+                <button id="finish-btn" class="hidden px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition shadow-lg shadow-emerald-500/20">
+                    Selesai & Lihat Hasil <i class="fa-solid fa-check ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Quick Jump Grid -->
+            <div class="mt-8 pt-6 border-t border-slate-800">
+                <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Navigasi Soal:</h4>
+                <div id="grid-navigation" class="grid grid-cols-7 sm:grid-cols-10 md:grid-cols-12 gap-2">
+                    <!-- Grid items created via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="result-screen" class="hidden space-y-8">
+            <!-- Summary Card -->
+            <div class="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-6 md:p-8 text-center shadow-xl">
+                <div class="inline-block p-4 rounded-full bg-slate-900 border border-slate-700 mb-4">
+                    <i id="score-icon" class="fa-solid fa-trophy text-4xl text-amber-400"></i>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">Hasil Kuis Anda</h2>
+                <p id="score-message" class="text-slate-400 text-sm mb-6">Kerja bagus! Berikut adalah ringkasan performa Anda.</p>
+
+                <!-- Score Circles / Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto mb-8">
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+                        <span class="block text-2xl md:text-3xl font-extrabold text-sky-400" id="final-score">0%</span>
+                        <span class="text-xs text-slate-400 font-medium">Nilai Akhir</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+                        <span class="block text-2xl md:text-3xl font-extrabold text-emerald-400" id="correct-count">0</span>
+                        <span class="text-xs text-slate-400 font-medium">Benar</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+                        <span class="block text-2xl md:text-3xl font-extrabold text-rose-400" id="wrong-count">0</span>
+                        <span class="text-xs text-slate-400 font-medium">Salah</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+                        <span class="block text-2xl md:text-3xl font-extrabold text-amber-400" id="time-taken">00:00</span>
+                        <span class="text-xs text-slate-400 font-medium">Waktu Digunakan</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button id="restart-btn" class="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition shadow-lg shadow-sky-500/20">
+                        <i class="fa-solid fa-rotate-right mr-2"></i> Coba Lagi
+                    </button>
+                </div>
+            </div>
+
+            <!-- Review Section -->
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-6 md:p-8">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center">
+                    <i class="fa-solid fa-magnifying-glass text-sky-400 mr-3"></i> Pembahasan Soal
+                </h3>
+                <div id="review-container" class="space-y-6">
+                    <!-- Review items injected via Javascript -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 py-6 bg-slate-900">
+        <div class="max-w-5xl mx-auto px-4 text-center text-xs text-slate-500">
+            &copy; 2026 Interactive Coding & AI Quiz App. Built for learning and self-assessment.
+        </div>
+    </footer>
+
+    <!-- Quiz JavaScript Logic -->
+    <script>
+        const questionsData = [
+            // Koding (1-18)
+            {
+                category: "Koding - Web Dev",
+                question: "Di bawah ini, manakah yang merupakan tipe data primitif di JavaScript?",
+                options: ["Array", "Object", "Boolean", "Date"],
+                answer: 2,
+                explanation: "Di JavaScript, Boolean, String, Number, Null, Undefined, Symbol, dan BigInt adalah tipe data primitif. Array dan Date merupakan tipe data turunan/Object."
+            },
+            {
+                category: "Koding - Python",
+                question: "Apa luaran dari kode Python berikut?\n\nprint(type([]) is list)",
+                options: ["True", "False", "TypeError", "None"],
+                answer: 0,
+                explanation: "Notasi [] membuat list kosong di Python, sehingga tipe datanya adalah list dan perbandingan 'is list' menghasilkan nilai True."
+            },
+            {
+                category: "Koding - Algoritma",
+                question: "Berapa kompleksitas waktu rata-rata (average time complexity) dari algoritma QuickSort?",
+                options: ["O(1)", "O(n)", "O(n log n)", "O(n²)"],
+                answer: 2,
+                explanation: "QuickSort memiliki kompleksitas waktu rata-rata O(n log n). Kasus terburuknya (worst case) adalah O(n²)."
+            },
+            {
+                category: "Koding - Git",
+                question: "Perintah Git apa yang digunakan untuk menggabungkan perubahan dari branch lain ke branch yang sedang aktif?",
+                options: ["git push", "git pull", "git merge", "git checkout"],
+                answer: 2,
+                explanation: "'git merge' digunakan untuk menggabungkan riwayat commit dari branch tertentu ke branch yang sedang aktif."
+            },
+            {
+                category: "Koding - HTML/CSS",
+                question: "Atribut HTML5 manakah yang digunakan untuk menandai kolom input yang wajib diisi sebelum form dikirimkan?",
+                options: ["validate", "required", "important", "needed"],
+                answer: 1,
+                explanation: "Atribut 'required' memaksa pengguna untuk mengisi field input tersebut sebelum form dikirim."
+            },
+            {
+                category: "Koding - OOP",
+                question: "Prinsip OOP yang menyembunyikan detail implementasi dan hanya menampilkan fungsionalitas utama kepada pengguna disebut...",
+                options: ["Inheritance", "Polymorphism", "Abstraction", "Encapsulation"],
+                answer: 2,
+                explanation: "Abstraction (Abstraksi) adalah proses menyembunyikan detail kompleksitas dan menyajikan antarmuka yang sederhana."
+            },
+            {
+                category: "Koding - Database",
+                question: "Dalam SQL, klausa manakah yang digunakan untuk memfilter hasil pengelompokan fungsi agregat (GROUP BY)?",
+                options: ["WHERE", "HAVING", "ORDER BY", "FILTER"],
+                answer: 1,
+                explanation: "Klausa 'HAVING' digunakan untuk menyaring data yang sudah dikelompokkan oleh 'GROUP BY', sedangkan 'WHERE' menyaring baris sebelum dikelompokkan."
+            },
+            {
+                category: "Koding - JavaScript",
+                question: "Apa hasil dari ekspresi `1 + '2' + 3` di JavaScript?",
+                options: ["6", "'123'", "'6'", "NaN"],
+                answer: 1,
+                explanation: "`1 + '2'` dikonversi menjadi string concatenation `'12'`. Kemudian `'12' + 3` menghasilkan string `'123'`."
+            },
+            {
+                category: "Koding - Data Structure",
+                question: "Struktur data manakah yang menerapkan prinsip LIFO (Last In, First Out)?",
+                options: ["Queue", "Stack", "Array", "Linked List"],
+                answer: 1,
+                explanation: "Stack menggunakan prinsip LIFO, di mana elemen yang terakhir masuk adalah yang pertama kali dikeluarkan."
+            },
+            {
+                category: "Koding - Python",
+                question: "Manakah method yang tepat di Python untuk menambahkan satu elemen ke akhir list?",
+                options: ["push()", "add()", "append()", "insert()"],
+                answer: 2,
+                explanation: "Di Python, method `append()` digunakan untuk menambahkan satu objek/elemen di bagian paling akhir list."
+            },
+            {
+                category: "Koding - Backend",
+                question: "HTTP Status Code 404 memiliki arti...",
+                options: ["Unauthorized", "Internal Server Error", "Not Found", "Bad Request"],
+                answer: 2,
+                explanation: "Kode status 404 menandakan bahwa server tidak dapat menemukan sumber daya (resource/URL) yang diminta."
+            },
+            {
+                category: "Koding - CSS",
+                question: "Properti CSS manakah yang digunakan untuk membuat tampilan tata letak fleksibel secara 1 dimensi (baris atau kolom)?",
+                options: ["Grid", "Flexbox", "Float", "Position"],
+                answer: 1,
+                explanation: "Flexbox dirancang khusus untuk tata letak satu dimensi (baik horizontal maupun vertikal)."
+            },
+            {
+                category: "Koding - Architecture",
+                question: "Format pertukaran data yang berbasis teks ringan dan sangat umum digunakan pada REST API adalah...",
+                options: ["XML", "JSON", "CSV", "YAML"],
+                answer: 1,
+                explanation: "JSON (JavaScript Object Notation) adalah format ringan yang standar digunakan pada komunikasi RESTful Web API."
+            },
+            {
+                category: "Koding - Python",
+                question: "Manakah keyword Python yang digunakan untuk menangani exception/error?",
+                options: ["try / catch", "try / except", "do / catch", "try / handle"],
+                answer: 1,
+                explanation: "Python menggunakan struktur sintaks `try` dan `except` untuk menangani pengecualian (exception handling)."
+            },
+            {
+                category: "Koding - Clean Code",
+                question: "Huruf 'S' pada prinsip SOLID dalam desain pemrograman berorientasi objek merujuk pada...",
+                options: ["Single Responsibility Principle", "System Design Principle", "Sequential Execution", "Software Scale"],
+                answer: 0,
+                explanation: "S melambangkan Single Responsibility Principle, yaitu sebuah class idealnya hanya memiliki satu alasan untuk berubah (satu tanggung jawab utama)."
+            },
+            {
+                category: "Koding - Dev Tools",
+                question: "Manakah perintah npm yang digunakan untuk mengunduh package dependencies yang ada di file package.json?",
+                options: ["npm start", "npm build", "npm install", "npm run"],
+                answer: 2,
+                explanation: "`npm install` (atau `npm i`) membaca file `package.json` dan mengunduh semua dependensi yang tercantum di dalamnya."
+            },
+            {
+                category: "Koding - Security",
+                question: "Jenis kerentanan keamanan web di mana penyerang menyisipkan skrip berbahaya ke dalam halaman web yang dilihat pengguna lain disebut...",
+                options: ["SQL Injection", "XSS (Cross-Site Scripting)", "CSRF", "DDoS"],
+                answer: 1,
+                explanation: "XSS (Cross-Site Scripting) adalah celah di mana penyerang memasukkan kode skrip (seperti JS) yang dieksekusi di browser korban."
+            },
+            {
+                category: "Koding - React",
+                question: "Di framework React, Hook manakah yang digunakan untuk menangani efek samping (side effects) seperti fetching data?",
+                options: ["useState", "useContext", "useEffect", "useReducer"],
+                answer: 2,
+                explanation: "`useEffect` digunakan untuk menjalankan efek samping pada komponen fungsi di React, seperti pengambilan data atau manipulasi DOM langsung."
+            },
+
+            // AI & Machine Learning (19-35)
+            {
+                category: "Artificial Intelligence",
+                question: "Istilah untuk kecerdasan buatan yang mampu melakukan tugas intelektual apa pun setara dengan manusia disebut...",
+                options: ["Narrow AI", "AGI (Artificial General Intelligence)", "Super AI", "Machine Intelligence"],
+                answer: 1,
+                explanation: "AGI (Artificial General Intelligence) merujuk pada tingkatan AI yang memiliki kemampuan belajar dan berpikir setara dengan otak manusia secara umum."
+            },
+            {
+                category: "Machine Learning",
+                question: "Jenis pembelajaran mesin (Machine Learning) yang menggunakan data berlabel (labeled data) untuk melatih model dinamakan...",
+                options: ["Unsupervised Learning", "Supervised Learning", "Reinforcement Learning", "Self-supervised Learning"],
+                answer: 1,
+                explanation: "Supervised learning menggunakan himpunan data yang menyertakan input beserta kunci/label jawaban yang benar."
+            },
+            {
+                category: "AI - Neural Networks",
+                question: "Komponen dasar pembentuk jaringan saraf tiruan (Artificial Neural Network) yang meniru fungsi sel saraf otak adalah...",
+                options: ["Neuron / Perceptron", "Tensor", "Gradient", "Kernel"],
+                answer: 0,
+                explanation: "Neuron (atau Perceptron dalam bentuk sederhananya) adalah unit pemrosesan dasar dalam Artificial Neural Network."
+            },
+            {
+                category: "AI - LLM",
+                question: "Arsitektur Deep Learning yang menjadi dasar pengembangan model bahasa besar (LLM) seperti GPT-4 dan Claude adalah...",
+                options: ["CNN (Convolutional Neural Network)", "RNN (Recurrent Neural Network)", "Transformer", "GAN"],
+                answer: 2,
+                explanation: "Arsitektur Transformer (diperkenalkan dalam makalah 'Attention Is All You Need' tahun 2017) menjadi basis sebagian besar LLM modern."
+            },
+            {
+                category: "Machine Learning",
+                question: "Kondisi di mana model Machine Learning bekerja sangat baik pada data pelatihan (training data) tetapi buruk pada data baru dinamakan...",
+                options: ["Underfitting", "Overfitting", "Convergence", "Generalization"],
+                answer: 1,
+                explanation: "Overfitting terjadi ketika model terlalu 'menghafal' pola dan noise pada data pelatihan sehingga tidak fleksibel terhadap data testing."
+            },
+            {
+                category: "Machine Learning",
+                question: "Metrik evaluasi mana yang cocok untuk mengukur proporsi prediksi positif yang benar-benar positif?",
+                options: ["Recall", "Precision", "Accuracy", "F1-Score"],
+                answer: 1,
+                explanation: "Precision mengukur dari seluruh data yang diprediksi positif, berapa banyak yang benar-benar bernilai positif (True Positives / (True Positives + False Positives))."
+            },
+            {
+                category: "AI - Deep Learning",
+                question: "Fungsi aktivasi manakah yang sering digunakan pada output layer untuk klasifikasi biner (dua kelas)?",
+                options: ["ReLU", "Sigmoid", "Softmax", "Tanh"],
+                answer: 1,
+                explanation: "Fungsi Sigmoid memetakan output ke dalam rentang nilai antara 0 dan 1, sangat ideal untuk probabilitas klasifikasi biner."
+            },
+            {
+                category: "AI - Computer Vision",
+                question: "Arsitektur Deep Learning yang paling populer dan efektif untuk pemrosesan gambar/citra digital adalah...",
+                options: ["CNN (Convolutional Neural Network)", "LSTM", "Autoencoder", "MLP"],
+                answer: 0,
+                explanation: "CNN dirancang khusus untuk menganalisis kisi data visual (gambar) menggunakan operasi konvolusi."
+            },
+            {
+                category: "AI - Natural Language Processing",
+                question: "Teknik mengubah kata atau teks menjadi representasi vektor numerik yang bermakna bagi AI disebut...",
+                options: ["Tokenization", "Word Embedding", "Lemmatization", "Parsing"],
+                answer: 1,
+                explanation: "Word Embedding (seperti Word2Vec atau GloVe) mengubah teks menjadi vektor nilai riil yang menangkap makna semantik kata."
+            },
+            {
+                category: "AI - Generative AI",
+                question: "Fenomena di mana model AI (seperti LLM) memberikan jawaban yang meyakinkan namun sebenarnya salah atau tidak berbasis fakta dinamakan...",
+                options: ["Hallucination", "Bias", "Overfitting", "Prompt Drift"],
+                answer: 0,
+                explanation: "Halusinasi (Hallucination) terjadi saat AI generatif membuat informasi fiktif yang terdengar logis padahal salah secara faktual."
+            },
+            {
+                category: "Machine Learning",
+                question: "Manakah algoritma berikut yang termasuk dalam Unsupervised Learning untuk pengelompokan data (clustering)?",
+                options: ["Linear Regression", "Decision Tree", "K-Means", "Support Vector Machine"],
+                answer: 2,
+                explanation: "K-Means adalah algoritma clustering tanpa pengawasan (unsupervised) yang mengelompokkan data ke dalam K cluster berdasarkan kemiripan."
+            },
+            {
+                category: "AI - Optimization",
+                question: "Metode optimasi matematika yang digunakan untuk menyesuaikan bobot (weights) pada Neural Network berdasarkan eror dinamakan...",
+                options: ["Backpropagation", "Forward Pass", "Convolution", "Cross-Validation"],
+                answer: 0,
+                explanation: "Backpropagation mengalkulasi gradien eror dari layer output kembali ke layer input untuk memperbarui bobot model."
+            },
+            {
+                category: "AI - Prompt Engineering",
+                question: "Teknik prompt di mana kita memberikan beberapa contoh pasangan input-output sebelum mengajukan pertanyaan ke LLM disebut...",
+                options: ["Zero-shot Prompting", "Few-shot Prompting", "Chain-of-Thought", "Negative Prompting"],
+                answer: 1,
+                explanation: "Few-shot Prompting memberikan beberapa (few) contoh kontekstual di dalam prompt agar model lebih akurat menghasilkan format jawaban."
+            },
+            {
+                category: "Machine Learning",
+                question: "Untuk mengatasi masalah imbalance data pada klasifikasi, teknik manakah yang digunakan untuk membuat data buatan kelas minoritas?",
+                options: ["SMOTE", "PCA", "MinMaxScaler", "Dropout"],
+                answer: 0,
+                explanation: "SMOTE (Synthetic Minority Over-sampling Technique) digunakan untuk menghasilkan sampel sintetis dari kelas minoritas."
+            },
+            {
+                category: "AI - Frameworks",
+                question: "Library open-source Python terpopuler yang dikembangkan oleh Meta untuk pembuatan dan pelatihan Deep Learning adalah...",
+                options: ["TensorFlow", "PyTorch", "Scikit-Learn", "Keras"],
+                answer: 1,
+                explanation: "PyTorch dikembangkan oleh laboratorium riset AI milik Meta dan sangat populer di kalangan peneliti serta praktisi AI."
+            },
+            {
+                category: "AI - Reinforcement Learning",
+                question: "Dalam Reinforcement Learning, komponen yang memberikan respons balik berupa hadiah/hukuman atas tindakan agen adalah...",
+                options: ["Policy", "Environment", "State", "Reward Function"],
+                answer: 3,
+                explanation: "Reward Function menghitung skor positif (hadiah) atau negatif (hukuman) atas tindakan yang diambil oleh agen di dalam lingkungan."
+            },
+            {
+                category: "AI - Ethics & Safety",
+                question: "Proses penyesuaian model AI agar output yang dihasilkan aman, relevan, dan sesuai dengan nilai-nilai moral manusia disebut...",
+                options: ["Fine-Tuning", "Alignment", "Pre-training", "Quantization"],
+                answer: 1,
+                explanation: "AI Alignment adalah bidang riset yang memastikan sistem AI bertindak sesuai dengan maksud, nilai, dan standar keselamatan manusia."
+            }
+        ];
+
+        // App State
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(questionsData.length).fill(null);
+        let timerInterval = null;
+        let timeRemaining = 35 * 60; // 35 minutes in seconds
+
+        // DOM Elements
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const timerContainer = document.getElementById('timer-container');
+        const timerDisplay = document.getElementById('timer-display');
+
+        const startBtn = document.getElementById('start-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const finishBtn = document.getElementById('finish-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        const questionCategory = document.getElementById('question-category');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const questionProgressText = document.getElementById('question-progress-text');
+        const answeredCountText = document.getElementById('answered-count-text');
+        const progressBar = document.getElementById('progress-bar');
+        const gridNavigation = document.getElementById('grid-navigation');
+
+        // Initialize App
+        startBtn.addEventListener('click', startQuiz);
+        prevBtn.addEventListener('click', goToPrevQuestion);
+        nextBtn.addEventListener('click', goToNextQuestion);
+        finishBtn.addEventListener('click', finishQuiz);
+        restartBtn.addEventListener('click', restartQuiz);
+
+        function startQuiz() {
+            welcomeScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            timerContainer.classList.remove('hidden');
+            timerContainer.classList.add('flex');
+
+            buildGridNavigation();
+            loadQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    finishQuiz();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function buildGridNavigation() {
+            gridNavigation.innerHTML = '';
+            for (let i = 0; i < questionsData.length; i++) {
+                const btn = document.createElement('button');
+                btn.className = `w-8 h-8 rounded-lg text-xs font-semibold flex items-center justify-center border transition ${
+                    i === 0 ? 'border-sky-500 bg-sky-500/20 text-sky-300' : 'border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700'
+                }`;
+                btn.textContent = i + 1;
+                btn.id = `grid-btn-${i}`;
+                btn.addEventListener('click', () => loadQuestion(i));
+                gridNavigation.appendChild(btn);
+            }
+        }
+
+        function updateGridStatus() {
+            for (let i = 0; i < questionsData.length; i++) {
+                const btn = document.getElementById(`grid-btn-${i}`);
+                if (!btn) continue;
+
+                // Reset base classes
+                let classes = "w-8 h-8 rounded-lg text-xs font-semibold flex items-center justify-center border transition ";
+
+                if (i === currentQuestionIndex) {
+                    classes += "ring-2 ring-sky-400 border-sky-500 ";
+                }
+
+                if (userAnswers[i] !== null) {
+                    classes += "bg-sky-600 text-white border-sky-500";
+                } else {
+                    classes += "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700";
+                }
+
+                btn.className = classes;
+            }
+        }
+
+        function loadQuestion(index) {
+            currentQuestionIndex = index;
+            const q = questionsData[index];
+
+            questionCategory.textContent = q.category;
+            
+            // Format line breaks or code format if present
+            questionText.innerHTML = q.question.replace(/\n/g, '<br>');
+
+            // Options
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, optIdx) => {
+                const optionBtn = document.createElement('button');
+                const isSelected = userAnswers[index] === optIdx;
+
+                optionBtn.className = `w-full text-left p-4 rounded-xl border transition flex items-center space-x-3 ${
+                    isSelected 
+                    ? 'border-sky-500 bg-sky-500/10 text-sky-200 font-medium' 
+                    : 'border-slate-700/80 bg-slate-900/50 hover:bg-slate-800 text-slate-300'
+                }`;
+
+                const letter = String.fromCharCode(65 + optIdx); // A, B, C, D
+                optionBtn.innerHTML = `
+                    <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${
+                        isSelected ? 'bg-sky-500 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'
+                    }">${letter}</span>
+                    <span class="text-sm flex-grow">${opt}</span>
+                `;
+
+                optionBtn.addEventListener('click', () => selectOption(optIdx));
+                optionsContainer.appendChild(optionBtn);
+            });
+
+            // Update Progress Header
+            questionProgressText.textContent = `Soal ${index + 1} dari ${questionsData.length}`;
+            const answeredCount = userAnswers.filter(a => a !== null).length;
+            answeredCountText.textContent = `${answeredCount}/${questionsData.length} Terjawab`;
+            progressBar.style.width = `${((index + 1) / questionsData.length) * 100}%`;
+
+            // Update Buttons
+            prevBtn.disabled = index === 0;
+            if (index === questionsData.length - 1) {
+                nextBtn.classList.add('hidden');
+                finishBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+                finishBtn.classList.add('hidden');
+            }
+
+            updateGridStatus();
+        }
+
+        function selectOption(optionIndex) {
+            userAnswers[currentQuestionIndex] = optionIndex;
+            loadQuestion(currentQuestionIndex);
+        }
+
+        function goToNextQuestion() {
+            if (currentQuestionIndex < questionsData.length - 1) {
+                loadQuestion(currentQuestionIndex + 1);
+            }
+        }
+
+        function goToPrevQuestion() {
+            if (currentQuestionIndex > 0) {
+                loadQuestion(currentQuestionIndex - 1);
+            }
+        }
+
+        function finishQuiz() {
+            clearInterval(timerInterval);
+
+            // Calculate Score
+            let correctCount = 0;
+            userAnswers.forEach((ans, idx) => {
+                if (ans === questionsData[idx].answer) {
+                    correctCount++;
+                }
+            });
+
+            const total = questionsData.length;
+            const percentage = Math.round((correctCount / total) * 100);
+            const wrongCount = total - correctCount;
+
+            const timeSpentSeconds = (35 * 60) - timeRemaining;
+            const minutesSpent = Math.floor(timeSpentSeconds / 60);
+            const secondsSpent = timeSpentSeconds % 60;
+            const timeFormatted = `${minutesSpent}m ${secondsSpent}s`;
+
+            // Display Results
+            document.getElementById('final-score').textContent = `${percentage}%`;
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('wrong-count').textContent = wrongCount;
+            document.getElementById('time-taken').textContent = timeFormatted;
+
+            // Trophy / Score Icon & Message
+            const scoreIcon = document.getElementById('score-icon');
+            const scoreMessage = document.getElementById('score-message');
+
+            if (percentage >= 80) {
+                scoreIcon.className = "fa-solid fa-trophy text-4xl text-amber-400";
+                scoreMessage.textContent = "Luar biasa! Pemahaman koding dan AI Anda sangat tajam.";
+            } else if (percentage >= 60) {
+                scoreIcon.className = "fa-solid fa-medal text-4xl text-sky-400";
+                scoreMessage.textContent = "Bagus! Anda memiliki fondasi yang cukup kuat.";
+            } else {
+                scoreIcon.className = "fa-solid fa-book-open text-4xl text-rose-400";
+                scoreMessage.textContent = "Jangan berkecil hati! Pelajari pembahasan di bawah dan coba lagi.";
+            }
+
+            // Build Review Section
+            buildReviewSection();
+
+            // Toggle Screens
+            quizScreen.classList.add('hidden');
+            timerContainer.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function buildReviewSection() {
+            const reviewContainer = document.getElementById('review-container');
+            reviewContainer.innerHTML = '';
+
+            questionsData.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isCorrect = userAns === q.answer;
+
+                const item = document.createElement('div');
+                item.className = `p-5 rounded-xl border bg-slate-900/60 ${
+                    isCorrect ? 'border-emerald-500/30' : 'border-rose-500/30'
+                }`;
+
+                const userAnsText = userAns !== null ? q.options[userAns] : 'Tidak Dijawab';
+                const correctAnsText = q.options[q.answer];
+
+                item.innerHTML = `
+                    <div class="flex items-start justify-between gap-4 mb-3">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Soal ${idx + 1} - ${q.category}</span>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${
+                            isCorrect ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                        }">
+                            ${isCorrect ? '<i class="fa-solid fa-check mr-1"></i> Benar' : '<i class="fa-solid fa-xmark mr-1"></i> Salah'}
+                        </span>
+                    </div>
+                    <p class="text-slate-200 font-medium text-sm md:text-base mb-4 leading-relaxed">${q.question.replace(/\n/g, '<br>')}</p>
+                    
+                    <div class="space-y-2 text-xs md:text-sm mb-4">
+                        <div class="flex items-center text-slate-300">
+                            <span class="w-32 font-semibold text-slate-400">Jawaban Anda:</span>
+                            <span class="${isCorrect ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}">${userAnsText}</span>
+                        </div>
+                        ${!isCorrect ? `
+                        <div class="flex items-center text-slate-300">
+                            <span class="w-32 font-semibold text-slate-400">Jawaban Benar:</span>
+                            <span class="text-emerald-400 font-semibold">${correctAnsText}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700/60 text-xs text-slate-300 leading-relaxed">
+                        <strong class="text-sky-400 block mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Pembahasan:</strong>
+                        ${q.explanation}
+                    </div>
+                `;
+
+                reviewContainer.appendChild(item);
+            });
+        }
+
+        function restartQuiz() {
+            userAnswers = new Array(questionsData.length).fill(null);
+            timeRemaining = 35 * 60;
+            currentQuestionIndex = 0;
+
+            resultScreen.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
+```eof
+
+### Petunjuk Penggunaan:
+1. Simpan kode di atas ke dalam satu berkas dengan nama `index.html`.
+2. Buka berkas `index.html` tersebut melalui peramban (browser) favorit Anda seperti Chrome, Firefox, atau Edge.
+3. Kuis siap dimainkan tanpa memerlukan pemasangan (*installation*) atau pustaka eksternal tambahan.
